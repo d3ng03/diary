@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>클라우드 네이티브 기말과제</title>
+    <!-- Include Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">한줄일기</h1>
+
+        <!-- Form to add new content -->
+        <form id="content-form" class="mt-4">
+            <div class="form-group">
+                <label for="content">오늘의 일기:</label>
+                <textarea id="content" name="content" class="form-control" rows="4" cols="50"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">일기 추가하기</button>
+        </form>
+
+        <!-- Display existing contents -->
+        <h2 class="mt-4">지난 일기:</h2>
+        <ul id="content-list" class="list-group"></ul>
+    </div>
+
+    <script>
+        // Function to fetch and display existing content
+        function fetchContents() {
+            fetch('http://localhost:5000/contents')
+                .then(response => response.json())
+                .then(contents => {
+                    const contentList = document.getElementById('content-list');
+                    contentList.innerHTML = '';
+
+                    contents.forEach(content => {
+                        const li = document.createElement('li');
+                        li.textContent = content.contents + ' (' + content.date + ')';
+                        li.className = 'list-group-item';
+                        contentList.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching contents:', error);
+                });
+        }
+
+        // Function to handle form submission and add new content
+        function addContent(event) {
+            event.preventDefault();
+
+            const content = document.getElementById('content').value;
+
+            fetch('http://localhost:5000/contents', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ contents: content }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('content').value = '';
+                    fetchContents(); // Refresh content list
+                } else {
+                    console.error('Error adding content:', response.statusText);
+                }
+            })
+            .catch(error => {
+                console.error('Error adding content:', error);
+            });
+        }
+
+        // Fetch existing content on page load
+        fetchContents();
+
+        // Attach form submission handler
+        const contentForm = document.getElementById('content-form');
+        contentForm.addEventListener('submit', addContent);
+    </script>
+
+    <!-- Include Bootstrap JS (optional) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
